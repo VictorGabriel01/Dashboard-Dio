@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porsche Sales Intelligence Dashboard - Evolução Temporal</title>
+    <!-- Fontes & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">    
+
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header>
+            <div class="header-brand">
+                <div class="porsche-badge">PORSCHE</div>
+                <div class="header-title">
+                    <h1>Sales & Executive Intelligence</h1>
+                    <p>Análise Evolutiva de Vendas ao Longo do Tempo</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <p><span class="status-indicator"></span>Base Ativa</p>
+                <p id="total-records-count" style="margin-top: 4px; font-weight: 600; color: #FFF;">100 Registros</p>
+            </div>
+        </header>
+
+        <!-- Filtros Dinâmicos -->
+        <section class="filter-panel">
+            <div class="filter-header">
+                <div class="filter-title">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+                    </svg>
+                    Filtros de Pesquisa
+                </div>
+                <button class="btn-reset" onclick="resetFilters()">Limpar Filtros</button>
+            </div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="filter-model">Modelo da Porsche</label>
+                    <select id="filter-model" onchange="applyFilters()">
+                        <option value="">Todos os Modelos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-year">Model Year (Ano)</label>
+                    <select id="filter-year" onchange="applyFilters()">
+                        <option value="">Todos os Anos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-city">Cidade (City)</label>
+                    <select id="filter-city" onchange="applyFilters()">
+                        <option value="">Todas as Cidades</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-pay">Forma de Pagamento</label>
+                    <select id="filter-pay" onchange="applyFilters()">
+                        <option value="">Todas as Formas</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPIs Principais -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Faturamento Total</div>
+                <div class="kpi-value" id="kpi-revenue">$0</div>
+                <div class="kpi-subtext">Volume acumulado</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Veículos Vendidos</div>
+                <div class="kpi-value" id="kpi-units">0</div>
+                <div class="kpi-subtext">Unidades comercializadas</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Ticket Médio</div>
+                <div class="kpi-value" id="kpi-ticket">$0</div>
+                <div class="kpi-subtext">Valor médio por veículo</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Pico de Vendas (Mês)</div>
+                <div class="kpi-value" id="kpi-peak-month">-</div>
+                <div class="kpi-subtext" id="kpi-peak-revenue">Maior faturamento mensal</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Modelo Mais Vendido</div>
+                <div class="kpi-value" id="kpi-top-model" style="font-size: 1.2rem;">-</div>
+                <div class="kpi-subtext" id="kpi-top-model-sub">Líder do período</div>
+            </div>
+        </section>
+
+        <!-- GRÁFICO DE EVOLUÇÃO TEMPORAL (DESTAQUE) -->
+        <section class="charts-grid">
+            <div class="chart-card col-12">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title" style="font-size: 1.1rem; color: #FFF;">Evolução Histórica das Vendas (Faturamento x Unidades)</div>
+                        <div class="chart-subtitle">Acompanhamento mês a mês das receitas (linha vermelha) e volume de veículos (barras cinzas)</div>
+                    </div>
+                </div>
+                <div class="chart-body" style="min-height: 340px;">
+                    <canvas id="chartEvolution"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gráficos Complementares -->
+        <section class="charts-grid">
+            <div class="chart-card col-6">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Distribuição por Model Year</div>
+                        <div class="chart-subtitle">Volume por ano do modelo</div>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartYear"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card col-6">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Top Modelos Porsche</div>
+                        <div class="chart-subtitle">Ranking por unidades comercializadas</div>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartModels"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card col-8">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Receita por Cidade (Top Hubs)</div>
+                        <div class="chart-subtitle">Faturamento por praça de venda</div>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartCity"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card col-4">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Métodos de Pagamento</div>
+                        <div class="chart-subtitle">Participação por modalidade</div>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartPay"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabela -->
+        <section class="table-card">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Detalhamento das Transações</div>
+                    <div class="chart-subtitle">Registros de vendas filtrados por data</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data Venda</th>
+                            <th>ID</th>
+                            <th>Modelo</th>
+                            <th>Ano Modelo</th>
+                            <th>Preço (USD)</th>
+                            <th>Cidade</th>
+                            <th>Pagamento</th>
+                            <th>Status Entrega</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Transações injetadas dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            Porsche Executive Intelligence Dashboard &bull; Módulo de Evolução Temporal
+        </footer>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
